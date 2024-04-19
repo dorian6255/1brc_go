@@ -7,6 +7,7 @@ import (
 	"os"
 	"runtime/pprof"
 	"runtime/trace"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
@@ -29,9 +30,10 @@ var wgstore sync.WaitGroup
 // once we fully reach the end of the file, we must find the avg of each one
 // then we return the result
 type valuesOut struct {
-	Min float32
-	Max float32
-	Avg float32
+	Name string
+	Min  float32
+	Max  float32
+	Avg  float32
 }
 
 type valueIn struct {
@@ -82,7 +84,7 @@ func main() {
 	scanner.Split(bufio.ScanLines)
 
 	for i := 0; i < 1; i++ {
-		go storeElement(in, &minimum, &maximum, &average, &nb)
+		go storeElement(in, &maximum, &minimum, &average, &nb)
 		wgstore.Add(1)
 	}
 
@@ -105,31 +107,56 @@ func main() {
 
 	wgstore.Wait()
 
-	res := make(map[string]valuesOut)
+	resmap := make(map[string]valuesOut)
+
 	maximum.Range(func(key, value any) bool {
 		k, _ := key.(string)
 		v := value.(float32)
-		res[k] = valuesOut{Max: v}
+		resmap[k] = valuesOut{Name: k, Max: v}
 		return true
 	})
+
 	minimum.Range(func(key, value any) bool {
+
 		k, _ := key.(string)
 		v := value.(float32)
-		tmp := res[k]
+		tmp := resmap[k]
 		tmp.Min = v
-		res[k] = tmp
+		resmap[k] = tmp
+
 		return true
 	})
 	average.Range(func(key, value any) bool {
 		k, _ := key.(string)
 		v := value.(float32)
-		tmp := res[k]
+		tmp := resmap[k]
 		tmp.Avg = v
-		res[k] = tmp
+		resmap[k] = tmp
 		return true
 	})
 
-	fmt.Println(res)
+	fmt.Print("{")
+	res := make([]string, len(resmap))
+	idx := 0
+	for k, _ := range resmap {
+		res[idx] = k
+
+		idx++
+	}
+	sort.Strings(res)
+	i := false
+	for _, str := range res {
+		value := resmap[str]
+		if !i {
+
+			fmt.Printf("%v=%.2f/%.2f/%.2f", value.Name, value.Min, value.Avg, value.Max)
+			i = true
+		} else {
+
+			fmt.Printf(", %v=%.2f/%.2f/%.2f", value.Name, value.Min, value.Avg, value.Max)
+		}
+	}
+	fmt.Print("}")
 
 }
 func sendScan(scanner bufio.Scanner, lines chan string) {
@@ -150,8 +177,8 @@ func storeElement(in chan valueIn, maximum, minimum, average, number *sync.Map) 
 		f, _ := min.(float32)
 
 		if ok && elem.value < float32(f) {
-
 			minimum.Store(elem.name, elem.value)
+
 		}
 
 		max, ok := maximum.LoadOrStore(elem.name, elem.value)
