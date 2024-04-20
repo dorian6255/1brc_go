@@ -1,0 +1,7 @@
+616,78s user 18,01s system 159% cpu 6:38,71 total # 1 try
+585,29s user 27,90s system 214% cpu 4:46,46 total # goroutine for processing
+240,75s user 14,97s system 305% cpu 1:23,68 total # goroutine for store && Batch size 10000
+249,13s user 17,64s system 301% cpu 1:28,41 total # Batch size 100000
+206,70s user 16,31s system 273% cpu 1:21,51 total # BATCH SIZE 1000
+156,89s user 8,16s system 298% cpu 55,259 total # buffer size 10000
+
