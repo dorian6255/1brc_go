@@ -21,6 +21,9 @@ var wgstore sync.WaitGroup
 
 const batchSize = 1000
 
+const nbReader = 10
+const endlineSymbol byte = '\n'
+const bufferSize = 35
 const uniqueStationName = 10000
 
 // my plan is to divide the file by x goroutine  -3
@@ -83,26 +86,17 @@ func main() {
 	// var res = sync.Map{}
 
 	filename := os.Args[1]
-	// content, err := os.ReadFile(filename)
-	lines := make(chan string, 10000)
-	in := make(chan valueIn)
+	content, err := os.ReadFile(filename)
+	lines := make(chan [bufferSize]byte, batchSize)
+	in := make(chan valueIn, batchSize)
 
 	max := make(chan storeUnit, batchSize)
 	min := make(chan storeUnit, batchSize)
 	avg := make(chan storeUnit, batchSize)
 
-	file, _ := os.Open(filename)
-	defer file.Close()
-	scanner := bufio.NewScanner(file)
-	// scanner := bufio.NewScanner(bytes.NewReader(content))
-	// scanner.Split(bufio.ScanLines)
+	go sendScanBuf(content, lines)
 
-	for i := 0; i < 1; i++ {
-
-		go sendScan(scanner, lines)
-
-		wgread.Add(1)
-	}
+	wgread.Add(1)
 
 	for i := 0; i < 1; i++ {
 
@@ -177,7 +171,7 @@ func main() {
 	// })
 
 	fmt.Print("{")
-	res := make([]string, uniqueStationName)
+	res := make([]string, len(resmap))
 	idx := 0
 	for k := range resmap {
 		res[idx] = k
@@ -198,6 +192,28 @@ func main() {
 		}
 	}
 	fmt.Print("}")
+
+}
+
+func sendScanBuf(data []byte, lines chan [bufferSize]byte) {
+
+	// read_lines := strings.Split(string(data), "\n")
+	// read_lines = read_lines[:len(read_lines)-1]
+	var buffer [bufferSize]byte
+	for i := 0; i < len(data); i++ {
+		//form line
+		j := 0
+		for ; i+j < len(data) && data[i+j] != endlineSymbol; j++ {
+			buffer[j] = data[i+j]
+		}
+
+		i += j
+
+		lines <- buffer
+	}
+
+	wgread.Done()
+	return
 
 }
 func sendScan(scanner *bufio.Scanner, lines chan string) {
@@ -286,10 +302,10 @@ func handleValues(in chan valueIn, minimum, average, maximum chan storeUnit) {
 	wgstore.Done()
 }
 
-func processLine(lines chan string, in chan valueIn) {
+func processLine(lines chan [bufferSize]byte, in chan valueIn) {
 
 	var group sync.WaitGroup
-	batch := make([]string, batchSize)
+	batch := make([][bufferSize]byte, batchSize)
 	i := 0
 	for newLine := range lines {
 
@@ -297,12 +313,15 @@ func processLine(lines chan string, in chan valueIn) {
 
 		i++
 		if i == batchSize {
+			batchCopy := batch
 			group.Add(1)
 			go func() {
 				for y := 0; y < i; y++ {
 
-					splitLine := strings.Split(batch[y], ";")
+					splitLine := strings.Split(string(batchCopy[y][:]), ";")
+
 					name := splitLine[0]
+
 					value, _ := strconv.ParseFloat(splitLine[1], 32)
 					in <- valueIn{name: name, value: float32(value)}
 
@@ -311,6 +330,7 @@ func processLine(lines chan string, in chan valueIn) {
 				return
 			}()
 			i = 0
+
 		}
 
 	}

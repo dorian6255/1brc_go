@@ -5,3 +5,11 @@
 206,70s user 16,31s system 273% cpu 1:21,51 total # BATCH SIZE 1000
 156,89s user 8,16s system 298% cpu 55,259 total # buffer size 10000
 
+332,65s user 26,29s system 311% cpu 1:55,29 total # change reading 
+222,57s user 11,50s system 285% cpu 1:21,94 total # send byte instead of string
+178,04s user 10,41s system 287% cpu 1:05,58 total # reduce buffer size && change process function to handle byte
+167,92s user 9,39s system 284% cpu 1:02,29 total # move string conversion to goroutine
+153,58s user 8,07s system 247% cpu 1:05,43 total # add buffer to channel lines & in
+
+114,82s user 6,78s system 254% cpu 47,743 total # reduce buffersize to 35byte
+
