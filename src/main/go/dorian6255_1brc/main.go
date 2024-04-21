@@ -4,9 +4,7 @@ import (
 	"dorian6255_1brc/internals/dataType"
 	"dorian6255_1brc/internals/handling"
 	"dorian6255_1brc/internals/reading"
-	"fmt"
 	"os"
-	"sort"
 )
 
 // optimisations idea :
@@ -16,11 +14,11 @@ import (
 // store []byte instead of string ?
 //  pass struct as reference
 
-func main() {
-	minimum := make(map[string]*float32, dataType.UniqueStationName)
-	maximum := make(map[string]*float32, dataType.UniqueStationName)
-	average := make(map[string]*float32, dataType.UniqueStationName)
-	nb := make(map[string]*float32, dataType.UniqueStationName)
+func Handle(filename string) {
+	minimum := make(map[string]float32, dataType.UniqueStationName)
+	maximum := make(map[string]float32, dataType.UniqueStationName)
+	average := make(map[string]float32, dataType.UniqueStationName)
+	nb := make(map[string]float32, dataType.UniqueStationName)
 	// maximum := sync.Map{}
 	// average := sync.Map{}
 	// nb := sync.Map{}
@@ -28,7 +26,6 @@ func main() {
 	//start
 	// var res = sync.Map{}
 
-	filename := os.Args[1]
 	content, _ := os.ReadFile(filename)
 	lines := make(chan [dataType.BufferSize]byte, dataType.BatchSize)
 	in := make(chan dataType.ValueIn, dataType.BatchSize)
@@ -73,7 +70,7 @@ func main() {
 	resmap := make(map[string]dataType.ValuesOut, dataType.UniqueStationName)
 
 	for key, value := range maximum {
-		resmap[key] = dataType.ValuesOut{Name: key, Max: value}
+		resmap[key] = dataType.ValuesOut{Name: key, Max: &value}
 	}
 	// maximum.Range(func(key, value any) bool {
 	// 	k, _ := key.(string)
@@ -84,13 +81,13 @@ func main() {
 	for key, value := range minimum {
 
 		tmp := resmap[key]
-		tmp.Min = value
+		tmp.Min = &value
 		resmap[key] = tmp
 	}
 	for key, value := range average {
 
 		tmp := resmap[key]
-		tmp.Avg = value
+		tmp.Avg = &value
 
 		resmap[key] = tmp
 	}
@@ -113,27 +110,32 @@ func main() {
 	// 	return true
 	// })
 
-	fmt.Print("{")
-	res := make([]string, len(resmap))
-	idx := 0
-	for k := range resmap {
-		res[idx] = k
+	// fmt.Print("{")
+	// res := make([]string, len(resmap))
+	// idx := 0
+	// for k := range resmap {
+	// 	res[idx] = k
+	//
+	// 	idx++
+	// }
+	// sort.Strings(res)
+	// i := false
+	// for _, str := range res {
+	// 	value := resmap[str]
+	// 	if !i {
+	//
+	// 		fmt.Printf("%v=%.2f/%.2f/%.2f", value.Name, *value.Min, *value.Avg, *value.Max)
+	// 		i = true
+	// 	} else {
+	//
+	// 		fmt.Printf(", %v=%.2f/%.2f/%.2f", value.Name, *value.Min, *value.Avg, *value.Max)
+	// 	}
+	// }
+	// fmt.Print("}")
 
-		idx++
-	}
-	sort.Strings(res)
-	i := false
-	for _, str := range res {
-		value := resmap[str]
-		if !i {
+}
+func main() {
 
-			fmt.Printf("%v=%.2f/%.2f/%.2f", value.Name, *value.Min, *value.Avg, *value.Max)
-			i = true
-		} else {
-
-			fmt.Printf(", %v=%.2f/%.2f/%.2f", value.Name, *value.Min, *value.Avg, *value.Max)
-		}
-	}
-	fmt.Print("}")
-
+	filename := os.Args[1]
+	Handle(filename)
 }

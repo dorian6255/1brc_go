@@ -1,0 +1,16 @@
+goos: linux
+goarch: amd64
+pkg: dorian6255_1brc
+cpu: Intel(R) Core(TM) i7-10710U CPU @ 1.10GHz
+BenchmarkHandle-12    	       3	 431863214 ns/op
+BenchmarkHandle-12    	       3	 399587238 ns/op
+BenchmarkHandle-12    	       3	 401690621 ns/op
+BenchmarkHandle-12    	       3	 393394100 ns/op
+BenchmarkHandle-12    	       3	 413867204 ns/op
+BenchmarkHandle-12    	       3	 416961053 ns/op
+BenchmarkHandle-12    	       3	 393280872 ns/op
+BenchmarkHandle-12    	       3	 397645739 ns/op
+BenchmarkHandle-12    	       3	 401196985 ns/op
+BenchmarkHandle-12    	       3	 403577643 ns/op
+PASS
+ok  	dorian6255_1brc	24.558s
