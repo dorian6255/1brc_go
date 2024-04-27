@@ -27,19 +27,23 @@ type outputType struct {
 	avg  int
 }
 
-// INFO: i did not unclude test because of how simple the function is, and the lack of opporunity i can see to improve the efficiency
+// INFO: i did not include test because of how simple the function is, and the lack of opporunity i can see to improve the efficiency
 func loadFile(filename string) []byte {
 
 	file, err := os.ReadFile(filename)
 	if err != nil {
-		panic("wrong filename")
+		errorString := fmt.Sprintf("invalide filename %s", filename)
+		panic(errorString)
 	}
 	return file
 
 }
 
 // TODO:
-func splitContent(content *[]byte) []*[]byte {
+// Given a file as content, we want this function to return X arrays of byte
+// X is gonna be the number of thread on the cpu
+// the goal here is to process the file multiple part at a time
+func splitContent(content []byte) [][]byte {
 
 	return nil
 }

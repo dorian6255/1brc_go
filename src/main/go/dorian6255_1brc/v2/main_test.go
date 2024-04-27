@@ -2,25 +2,46 @@ package main
 
 import (
 	"reflect"
+	"runtime"
 	"testing"
 )
 
 func Test_splitContent(t *testing.T) {
+
 	type args struct {
-		content *[]byte
+		content []byte
 	}
-	tests := []struct {
+	type testParams struct {
 		name string
 		args args
-		want []*[]byte
-	}{
-		// TODO: Add test cases.
 	}
+	var testFolder string = "tests/"
+	testFiles := [5]string{testFolder + "test12.txt", testFolder + "test24.txt", testFolder + "test48.txt", testFolder + "test96.txt", testFolder + "test100.txt"}
+
+	var tests []testParams
+	var content [][]byte
+	for _, file := range testFiles {
+
+		content = append(content, loadFile(file))
+		tests = append(tests, testParams{name: file, args: args{loadFile(file)}})
+	}
+
+	//check if split in 12
+	//check if last if \n
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := splitContent(tt.args.content); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("splitContent() = %v, want %v", got, tt.want)
+
+			got := splitContent(tt.args.content)
+			if len(got) != runtime.NumCPU() {
+				t.Errorf("split not using all cpu, got: %v", len(got))
 			}
+			for _, split := range content {
+
+				if split[len(split)-1] != endlineSymbole {
+					t.Errorf("Last symbole in not endlineSymbole %v", split[len(split)-1])
+				}
+			}
+
 		})
 	}
 }
