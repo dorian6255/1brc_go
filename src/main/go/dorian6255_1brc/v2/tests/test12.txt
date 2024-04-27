@@ -1,0 +1,12 @@
+Karachi;28.6
+Ahvaz;23.4
+Cairo;17.3
+Gaborone;-3.4
+Harare;13.0
+Baku;14.4
+London;7.8
+Kingston;34.3
+Lodwar;41.6
+Moscow;0.5
+Nouakchott;29.4
+Nuuk;-0.1

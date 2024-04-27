@@ -1,0 +1,48 @@
+Minneapolis;20.1
+Mexicali;42.8
+Melbourne;14.0
+Murmansk;-9.5
+Mango;27.2
+İzmir;22.6
+Kampala;1.1
+Mzuzu;25.7
+Edinburgh;-4.2
+Irkutsk;-4.1
+Mexico City;24.9
+Gangtok;11.2
+Honolulu;30.1
+Ifrane;24.6
+Chittagong;11.4
+Brussels;10.9
+Harare;34.9
+Changsha;-9.3
+Erzurum;15.2
+Tunis;5.3
+Kuala Lumpur;24.5
+Praia;22.1
+Alexandra;-7.1
+Melbourne;6.2
+Chittagong;12.8
+Marseille;4.1
+Ouarzazate;32.9
+Naha;42.8
+Nairobi;12.4
+Pontianak;19.7
+Kuwait City;20.0
+Santo Domingo;26.6
+Memphis;27.4
+Nassau;29.3
+Bergen;-3.7
+Philadelphia;10.9
+Karachi;28.6
+Ahvaz;23.4
+Cairo;17.3
+Gaborone;-3.4
+Harare;13.0
+Baku;14.4
+London;7.8
+Kingston;34.3
+Lodwar;41.6
+Moscow;0.5
+Nouakchott;29.4
+Nuuk;-0.1

@@ -1,0 +1,24 @@
+Chittagong;12.8
+Marseille;4.1
+Ouarzazate;32.9
+Naha;42.8
+Nairobi;12.4
+Pontianak;19.7
+Kuwait City;20.0
+Santo Domingo;26.6
+Memphis;27.4
+Nassau;29.3
+Bergen;-3.7
+Philadelphia;10.9
+Karachi;28.6
+Ahvaz;23.4
+Cairo;17.3
+Gaborone;-3.4
+Harare;13.0
+Baku;14.4
+London;7.8
+Kingston;34.3
+Lodwar;41.6
+Moscow;0.5
+Nouakchott;29.4
+Nuuk;-0.1
