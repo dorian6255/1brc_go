@@ -5,26 +5,6 @@ import (
 	"testing"
 )
 
-func Test_loadFile(t *testing.T) {
-	type args struct {
-		filename string
-	}
-	tests := []struct {
-		name string
-		args args
-		want *[]byte
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := loadFile(tt.args.filename); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("loadFile() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func Test_splitContent(t *testing.T) {
 	type args struct {
 		content *[]byte
@@ -97,10 +77,16 @@ func BenchmarkInterpretLine(b *testing.B) {
 		want1 int
 	}{
 		{name: "test1Case", args: args{data: []byte{84, 111, 97, 109, 97, 115, 105, 110, 97, 59, 50, 50, 46, 48, 10}}, want: []byte{84, 111, 97, 109, 97, 115, 105, 110, 97}, want1: 220},
+		{name: "test2Case", args: args{data: []byte{84, 101, 108, 32, 65, 118, 105, 118, 59, 50, 54, 46, 55, 10}}, want: []byte{84, 101, 108, 32, 65, 118, 105, 118}, want1: 267},
 	}
-	for i := 0; i < b.N; i++ {
+	for _, tt := range tests {
+		b.Run(tt.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
 
-		interpretLine(tests[0].args.data)
+				interpretLine(tests[0].args.data)
+
+			}
+		})
 	}
 
 }
@@ -129,6 +115,36 @@ func Test_interpretLine(t *testing.T) {
 		})
 	}
 }
+func BenchmarkInterpretValue(b *testing.B) {
+
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name  string
+		args  args
+		want1 int
+	}{
+		//22.0 26.7 -26.7 1.5 -2.4 0.0
+		{name: "TestPositiveValue", args: args{data: []byte{50, 50, 46, 48, 10}}, want1: 220},
+		{name: "testPositiveValue", args: args{data: []byte{50, 54, 46, 55, 10}}, want1: 267},
+		{name: "testNegativeValue", args: args{data: []byte{45, 50, 54, 46, 55, 10}}, want1: -267},
+		{name: "testSingleDigit", args: args{data: []byte{49, 46, 53, 10}}, want1: 15},
+		{name: "testNegSingleDigit", args: args{data: []byte{45, 50, 46, 52, 10}}, want1: -24},
+		{name: "testZero", args: args{data: []byte{48, 46, 48, 10}}, want1: 0},
+	}
+	for _, tt := range tests {
+		b.Run(tt.name, func(t *testing.B) {
+			for i := 0; i < b.N; i++ {
+
+				interpretValue(tt.args.data)
+			}
+
+		})
+	}
+
+}
+
 func Test_interpretValue(t *testing.T) {
 
 	type args struct {

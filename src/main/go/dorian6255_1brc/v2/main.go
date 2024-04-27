@@ -27,6 +27,7 @@ type outputType struct {
 	avg  int
 }
 
+// INFO: i did not unclude test because of how simple the function is, and the lack of opporunity i can see to improve the efficiency
 func loadFile(filename string) []byte {
 
 	file, err := os.ReadFile(filename)
@@ -36,15 +37,20 @@ func loadFile(filename string) []byte {
 	return file
 
 }
+
+// TODO:
 func splitContent(content *[]byte) []*[]byte {
 
 	return nil
 }
+
+// TODO:
 func mergeResult(data ...map[string]outputType) map[string]outputType {
 
 	return nil
 }
 
+// TODO:
 func process(data []byte) map[string]outputType {
 
 	var tmp [maxSizeName]byte
@@ -72,7 +78,7 @@ func interpretLine(line []byte) ([]byte, int) {
 	return line[:lineIdx-1], interpretValue(line[lineIdx+1:])
 }
 
-// TODO:   see interpretLine
+// PERF: for now, it takes only ~0,00004ns per operation (unless the bench is wrong)
 func interpretValue(line []byte) int {
 	var res int
 	var neg bool = false
