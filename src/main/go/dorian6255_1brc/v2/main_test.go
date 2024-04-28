@@ -100,15 +100,15 @@ func Test_splitContent(t *testing.T) {
 }
 func BenchmarkMergeResult(b *testing.B) {
 	type args struct {
-		data []map[string]outputType
+		data []map[string]readingType
 	}
 	tests := []struct {
 		name string
 		args args
-		want map[string]outputType
+		want map[string]readingType
 	}{
-		{name: "testWithMoreComplexCase1", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{-120, 50, 150, 15}}, map[string]outputType{"toto1": outputType{0, 200, 25, 7}}}}, want: map[string]outputType{"toto1": outputType{-120, 200, 110, 22}}},
-		{name: "testWithMoreComplexCase2", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{-20, 200, 10, 20}}, map[string]outputType{"toto1": outputType{50, 80, 60, 9}}}}, want: map[string]outputType{"toto1": outputType{-20, 200, 110, 25}}},
+		{name: "testWithMoreComplexCase1", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{-120, 50, 150, 15}}, map[string]readingType{"toto1": readingType{0, 200, 25, 7}}}}, want: map[string]readingType{"toto1": readingType{-120, 200, 110, 22}}},
+		{name: "testWithMoreComplexCase2", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{-20, 200, 10, 20}}, map[string]readingType{"toto1": readingType{50, 80, 60, 9}}}}, want: map[string]readingType{"toto1": readingType{-20, 200, 110, 25}}},
 	}
 
 	b.ResetTimer()
@@ -126,18 +126,18 @@ func BenchmarkMergeResult(b *testing.B) {
 
 func Test_mergeMinMaxAvg(t *testing.T) {
 	type args struct {
-		data []map[string]outputType
+		data []map[string]readingType
 	}
 	tests := []struct {
 		name string
 		args args
-		want map[string]outputType
+		want map[string]readingType
 	}{
-		{name: "testOneMap", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{1, 1, 1, 1}}}}, want: map[string]outputType{"toto1": outputType{1, 1, 1, 1}}},
-		{name: "testTwoMapAvg", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{1, 1, 10, 1}}, map[string]outputType{"toto1": outputType{1, 1, 20, 1}}}}, want: map[string]outputType{"toto1": outputType{1, 1, 15, 2}}},
-		{name: "testTwoMapMin", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{2, 1, 10, 1}}, map[string]outputType{"toto1": outputType{5, 1, 20, 1}}}}, want: map[string]outputType{"toto1": outputType{2, 1, 15, 2}}},
-		{name: "testTwoMapMax", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{1, 2, 10, 1}}, map[string]outputType{"toto1": outputType{1, 5, 20, 1}}}}, want: map[string]outputType{"toto1": outputType{1, 5, 15, 2}}},
-		{name: "testWithMoreComplexCase1", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{-120, 50, 150, 15}}, map[string]outputType{"toto1": outputType{0, 200, 25, 7}}}}, want: map[string]outputType{"toto1": outputType{-120, 200, 110, 22}}},
+		{name: "testOneMap", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{1, 1, 1, 1}}}}, want: map[string]readingType{"toto1": readingType{1, 1, 1, 1}}},
+		{name: "testTwoMapAvg", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{1, 1, 10, 1}}, map[string]readingType{"toto1": readingType{1, 1, 20, 1}}}}, want: map[string]readingType{"toto1": readingType{1, 1, 15, 2}}},
+		{name: "testTwoMapMin", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{2, 1, 10, 1}}, map[string]readingType{"toto1": readingType{5, 1, 20, 1}}}}, want: map[string]readingType{"toto1": readingType{2, 1, 15, 2}}},
+		{name: "testTwoMapMax", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{1, 2, 10, 1}}, map[string]readingType{"toto1": readingType{1, 5, 20, 1}}}}, want: map[string]readingType{"toto1": readingType{1, 5, 15, 2}}},
+		{name: "testWithMoreComplexCase1", args: args{[]map[string]readingType{map[string]readingType{"toto1": readingType{-120, 50, 150, 15}}, map[string]readingType{"toto1": readingType{0, 200, 25, 7}}}}, want: map[string]readingType{"toto1": readingType{-120, 200, 110, 22}}},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -163,22 +163,22 @@ func Test_mergeMinMaxAvg(t *testing.T) {
 func Test_mergeResult(t *testing.T) {
 
 	type args struct {
-		data []map[string]outputType
+		data []map[string]readingType
 	}
 	type test = struct {
 		name string
 		args args
-		want map[string]outputType
+		want map[string]readingType
 	}
 	var tests []test
 
 	//NOTE: want creation
 	// for the test, i just use client{{i}}= i,i,i as value that i need to find
-	want := map[string]outputType{}
+	want := map[string]readingType{}
 
 	for i := 0; i < runtime.NumCPU(); i++ {
 
-		want[fmt.Sprintf("client%v", i)] = outputType{i, i, i, 1}
+		want[fmt.Sprintf("client%v", i)] = readingType{i, i, i, 1}
 	}
 
 	//NOTE: args creation
@@ -194,11 +194,11 @@ func Test_mergeResult(t *testing.T) {
 
 			for x := 0; x < runtime.NumCPU(); x += mapSplit {
 
-				var tmpMap = map[string]outputType{}
+				var tmpMap = map[string]readingType{}
 
 				for j := 0; j < mapSplit; j++ {
 					if j < mapSplit {
-						tmpMap[fmt.Sprintf("client%v", j+x)] = outputType{j + x, j + x, j + x, 1}
+						tmpMap[fmt.Sprintf("client%v", j+x)] = readingType{j + x, j + x, j + x, 1}
 					}
 
 				}
@@ -372,23 +372,6 @@ func Test_interpretValue(t *testing.T) {
 			if got != tt.want1 {
 				t.Errorf("interpretLine() got = %v, want %v", got, tt.want1)
 			}
-		})
-	}
-}
-
-func Test_showResult(t *testing.T) {
-	type args struct {
-		res map[string]outputType
-	}
-	tests := []struct {
-		name string
-		args args
-	}{
-		// TODO: Add test cases.
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			showResult(tt.args.res)
 		})
 	}
 }

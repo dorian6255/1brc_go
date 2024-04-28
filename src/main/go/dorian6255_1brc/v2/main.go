@@ -4,7 +4,9 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"sort"
 	"strconv"
+	"strings"
 )
 
 const endlineSymbole byte = '\n'
@@ -15,14 +17,22 @@ const maxSizeLine int = 50
 const maxDifferentName int = 1000
 
 func main() {
-	// filename := os.Args[1]
-	// data := loadFile(filename)
-	// res := process(data)
-	// showResult(res)
+	filename := os.Args[1]
+	data := loadFile(filename)
+	content := splitContent(data)
+
+	var mapSplit = make([]map[string]readingType, len(content))
+	for i := 0; i < len(content); i++ {
+
+		//TODO: use go function
+		mapSplit[i] = processContent(content[i])
+	}
+	res := mergeResult(mapSplit...)
+	showResult(res)
 
 }
 
-type outputType struct {
+type readingType struct {
 	// name string
 	Min int
 	Max int
@@ -81,7 +91,7 @@ func splitContent(content []byte) [][]byte {
 
 // INFO: tested indirectly via mergeResult function tests
 // TODO: Implement Bench && try with min and max function
-func mergeTwoOuputType(f1, f2 outputType) outputType {
+func mergeTwoOuputType(f1, f2 readingType) readingType {
 
 	switch {
 	//TODO: make a function that take two outputType, and return one with min,max,avg, updated
@@ -100,10 +110,10 @@ func mergeTwoOuputType(f1, f2 outputType) outputType {
 }
 
 // receive runtime.numcp() map and merge the result of each map into a res map
-func mergeResult(data ...map[string]outputType) map[string]outputType {
+func mergeResult(data ...map[string]readingType) map[string]readingType {
 	//TODO: use make to see perrformance evolution
 	//and try to use the first map
-	var res = map[string]outputType{}
+	var res = map[string]readingType{}
 
 	for _, m := range data {
 
@@ -128,9 +138,9 @@ func mergeResult(data ...map[string]outputType) map[string]outputType {
 // fill a map
 // return the map
 // it will run in a go routine
-func processContent(data []byte) map[string]outputType {
+func processContent(data []byte) map[string]readingType {
 
-	res := make(map[string]outputType, maxDifferentName)
+	res := make(map[string]readingType, maxDifferentName)
 
 	var lineBuffer = [maxSizeLine]byte{}
 	bufferIdx := 0
@@ -141,13 +151,13 @@ func processContent(data []byte) map[string]outputType {
 
 			name, value := interpretLine(lineBuffer[:])
 			nameS := string(name)
-			var valueOutputType = outputType{value, value, value, 1}
+			var valueOutputType = readingType{value, value, value, 1}
 			v, ok := res[nameS]
 			if ok {
 				res[nameS] = mergeTwoOuputType(v, valueOutputType)
 
 			} else {
-				res[nameS] = outputType{value, value, value, 1}
+				res[nameS] = readingType{value, value, value, 1}
 			}
 
 			bufferIdx = 0
@@ -210,6 +220,27 @@ func interpretValue(line []byte) int {
 	res = int(tmp)
 	return res
 }
-func showResult(res map[string]outputType) {
+
+func showResult(res map[string]readingType) {
+	var tmpStringArray = make([]string, len(res))
+	i := 0
+	for k := range res {
+
+		tmpStringArray[i] = k
+		i++
+	}
+	sort.Strings(tmpStringArray)
+	var sb strings.Builder
+	sb.WriteString("{")
+	for i := 0; i < len(tmpStringArray); i++ {
+
+		tmp := res[tmpStringArray[i]]
+		min := float32(tmp.Min) / 10
+		max := float32(tmp.Max) / 10
+		avg := float32(tmp.Avg) / 10
+		sb.WriteString(fmt.Sprintf("%v=%v/%v/%v, ", tmpStringArray[i], min, avg, max))
+
+	}
+	fmt.Println(sb.String())
 
 }
