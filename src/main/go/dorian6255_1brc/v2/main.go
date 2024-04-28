@@ -11,13 +11,14 @@ const endlineSymbole byte = '\n'
 
 const splitLineSymbol byte = ';'
 const maxSizeName int = 35
+const maxSizeLine int = 50
 const maxDifferentName int = 1000
 
 func main() {
-	filename := os.Args[1]
-	data := loadFile(filename)
-	res := process(data)
-	showResult(res)
+	// filename := os.Args[1]
+	// data := loadFile(filename)
+	// res := process(data)
+	// showResult(res)
 
 }
 
@@ -78,6 +79,26 @@ func splitContent(content []byte) [][]byte {
 	return res
 }
 
+// INFO: tested indirectly via mergeResult function tests
+// TODO: Implement Bench && try with min and max function
+func mergeTwoOuputType(f1, f2 outputType) outputType {
+
+	switch {
+	//TODO: make a function that take two outputType, and return one with min,max,avg, updated
+	case f1.Min > f2.Min:
+		f1.Min = f2.Min
+	case f1.Max < f2.Max:
+		f1.Max = f2.Max
+
+	}
+
+	f1.Avg = ((f1.Avg * f1.Nb) + (f2.Avg * f2.Nb)) / (f1.Nb + f2.Nb)
+	f1.Nb += f2.Nb
+
+	return f1
+
+}
+
 // receive runtime.numcp() map and merge the result of each map into a res map
 func mergeResult(data ...map[string]outputType) map[string]outputType {
 	//TODO: use make to see perrformance evolution
@@ -89,20 +110,8 @@ func mergeResult(data ...map[string]outputType) map[string]outputType {
 		for k, v := range m {
 			value, ok := res[k]
 			if ok {
-				switch {
-				//TODO: make a function that take two outputType, and return one with min,max,avg, updated
-				case value.Min > v.Min:
-					value.Min = v.Min
-				case value.Max < v.Max:
-					value.Max = v.Max
 
-				}
-				//NOTE: for avg and nb
-
-				value.Avg = ((value.Avg * value.Nb) + (v.Avg * v.Nb)) / (value.Nb + v.Nb)
-				value.Nb += v.Nb
-
-				res[k] = value
+				res[k] = mergeTwoOuputType(value, v)
 			} else {
 				res[k] = v
 			}
@@ -119,16 +128,35 @@ func mergeResult(data ...map[string]outputType) map[string]outputType {
 // fill a map
 // return the map
 // it will run in a go routine
-func process(data []byte) map[string]outputType {
+func processContent(data []byte) map[string]outputType {
 
 	res := make(map[string]outputType, maxDifferentName)
 
-	//TODO: process line by line
-	//for the size of the data
-	// if we find an endline
-	// we get the name, value of the line
-	// we process the result (min, max, avg)
-	// we go to the next one
+	var lineBuffer = [maxSizeLine]byte{}
+	bufferIdx := 0
+	for dataIdx := 0; dataIdx < len(data); dataIdx++ {
+		lineBuffer[bufferIdx] = data[dataIdx]
+
+		if lineBuffer[bufferIdx] == endlineSymbole {
+
+			name, value := interpretLine(lineBuffer[:])
+			nameS := string(name)
+			var valueOutputType = outputType{value, value, value, 1}
+			v, ok := res[nameS]
+			if ok {
+				res[nameS] = mergeTwoOuputType(v, valueOutputType)
+
+			} else {
+				res[nameS] = outputType{value, value, value, 1}
+			}
+
+			bufferIdx = 0
+		} else {
+			bufferIdx++
+		}
+
+	}
+
 	return res
 }
 
@@ -140,7 +168,7 @@ func interpretLine(line []byte) ([]byte, int) {
 
 	}
 
-	return line[:lineIdx-1], interpretValue(line[lineIdx+1:])
+	return line[:lineIdx], interpretValue(line[lineIdx+1:])
 }
 
 // PERF: for now, it takes only ~0,00004ns per operation (unless the bench is wrong)

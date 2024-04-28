@@ -1,0 +1,17 @@
+goos: linux
+goarch: amd64
+pkg: v2
+cpu: Intel(R) Core(TM) i7-10710U CPU @ 1.10GHz
+BenchmarkSplitContent1M-12    	 2406250	       972.1 ns/op
+BenchmarkMergeResult/testWithMoreComplexCase1-12         	 1000000	      2134 ns/op
+BenchmarkMergeResult/testWithMoreComplexCase2-12         	  517126	      2331 ns/op
+BenchmarkInterpretLine/test1Case-12                      	31143741	        37.58 ns/op
+BenchmarkInterpretLine/test2Case-12                      	30068482	        38.78 ns/op
+BenchmarkInterpretValue/TestPositiveValue-12             	1000000000	         0.0000007 ns/op
+BenchmarkInterpretValue/testPositiveValue-12             	1000000000	         0.0000006 ns/op
+BenchmarkInterpretValue/testNegativeValue-12             	1000000000	         0.0000010 ns/op
+BenchmarkInterpretValue/testSingleDigit-12               	1000000000	         0.0000006 ns/op
+BenchmarkInterpretValue/testNegSingleDigit-12            	1000000000	         0.0000005 ns/op
+BenchmarkInterpretValue/testZero-12                      	1000000000	         0.0000005 ns/op
+PASS
+ok  	v2	10.057s

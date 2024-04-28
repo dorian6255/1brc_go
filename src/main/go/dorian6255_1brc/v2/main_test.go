@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"reflect"
 	"runtime"
 	"testing"
 )
@@ -98,6 +97,31 @@ func Test_splitContent(t *testing.T) {
 
 		})
 	}
+}
+func BenchmarkMergeResult(b *testing.B) {
+	type args struct {
+		data []map[string]outputType
+	}
+	tests := []struct {
+		name string
+		args args
+		want map[string]outputType
+	}{
+		{name: "testWithMoreComplexCase1", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{-120, 50, 150, 15}}, map[string]outputType{"toto1": outputType{0, 200, 25, 7}}}}, want: map[string]outputType{"toto1": outputType{-120, 200, 110, 22}}},
+		{name: "testWithMoreComplexCase2", args: args{[]map[string]outputType{map[string]outputType{"toto1": outputType{-20, 200, 10, 20}}, map[string]outputType{"toto1": outputType{50, 80, 60, 9}}}}, want: map[string]outputType{"toto1": outputType{-20, 200, 110, 25}}},
+	}
+
+	b.ResetTimer()
+	for idx, tt := range tests {
+		b.Run(tt.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+
+				mergeResult(tests[idx].args.data...)
+
+			}
+		})
+	}
+
 }
 
 func Test_mergeMinMaxAvg(t *testing.T) {
@@ -199,22 +223,47 @@ func Test_mergeResult(t *testing.T) {
 	}
 }
 
-func Test_process(t *testing.T) {
+func Test_processContent(t *testing.T) {
+	const filename string = "tests/test100.txt"
 	type args struct {
 		data []byte
 	}
 	tests := []struct {
-		name string
-		args args
-		want map[string]outputType
+		name    string
+		args    args
+		nbValue int
 	}{
-		// TODO: Add test cases.
+		{name: "test100", args: args{data: loadFile(filename)}, nbValue: 86},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := process(tt.args.data); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("process() = %v, want %v", got, tt.want)
+			got := processContent(tt.args.data)
+			if len(got) != tt.nbValue { //NOTE: nb line - doublons
+				t.Errorf("Incorrect number of entry got : %v, want %v", len(got), tt.nbValue)
 			}
+			value, ok := got["Kingston"]
+			fmt.Println(got)
+
+			if !ok {
+				t.Errorf("Kingston missing from res")
+			}
+			if value.Nb != 2 {
+				t.Errorf("Incorrect number of value for Kingston got %v", value.Nb)
+
+			}
+			if value.Max != 343 {
+
+				t.Errorf("Incorrect max of value for Kingston got %v", value.Max)
+			}
+			if value.Min != 262 {
+
+				t.Errorf("Incorrect Min of value for Kingston got %v", value.Min)
+			}
+			if value.Avg != 302 {
+
+				t.Errorf("Incorrect Min of value for Kingston got %v", value.Min)
+			}
+
 		})
 	}
 }
@@ -260,7 +309,7 @@ func Test_interpretLine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := interpretLine(tt.args.data)
-			if reflect.DeepEqual(got, tt.want) {
+			if string(got) != string(tt.want) {
 				t.Errorf("interpretLine() got = %v, want %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
