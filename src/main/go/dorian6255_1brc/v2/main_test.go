@@ -223,6 +223,31 @@ func Test_mergeResult(t *testing.T) {
 	}
 }
 
+func BenchmarkProcessContent(b *testing.B) {
+	const filename string = "tests/measurements1000000.txt"
+	type args struct {
+		data []byte
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{name: "test1000000", args: args{data: loadFile(filename)}},
+	}
+
+	var got = make(map[string]readingType, maxDifferentName)
+	for _, tt := range tests {
+		b.Run(tt.name, func(b *testing.B) {
+			for i := 0; i < b.N; i++ {
+
+				processWaitgroup.Add(1)
+				processContent(tt.args.data, got)
+
+			}
+		})
+	}
+
+}
 func Test_processContent(t *testing.T) {
 	const filename string = "tests/test100.txt"
 	type args struct {
@@ -237,12 +262,13 @@ func Test_processContent(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := processContent(tt.args.data)
-			if len(got) != tt.nbValue { //NOTE: nb line - doublons
+			var got = make(map[string]readingType, 100)
+			processWaitgroup.Add(1)
+			processContent(tt.args.data, got)
+			if len(got) != tt.nbValue { //NOTE: tt.nbValue == nb line - doublons
 				t.Errorf("Incorrect number of entry got : %v, want %v", len(got), tt.nbValue)
 			}
 			value, ok := got["Kingston"]
-			fmt.Println(got)
 
 			if !ok {
 				t.Errorf("Kingston missing from res")
@@ -309,7 +335,7 @@ func Test_interpretLine(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got, got1 := interpretLine(tt.args.data)
-			if string(got) != string(tt.want) {
+			if string(got[:]) != string(tt.want[:]) {
 				t.Errorf("interpretLine() got = %v, want %v", got, tt.want)
 			}
 			if got1 != tt.want1 {
@@ -337,7 +363,7 @@ func BenchmarkInterpretValue(b *testing.B) {
 		{name: "testZero", args: args{data: []byte{48, 46, 48, 10}}, want1: 0},
 	}
 	for _, tt := range tests {
-		b.Run(tt.name, func(t *testing.B) {
+		b.Run(tt.name, func(b *testing.B) {
 			for i := 0; i < b.N; i++ {
 
 				interpretValue(tt.args.data)

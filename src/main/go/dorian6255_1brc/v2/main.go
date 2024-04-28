@@ -1,12 +1,16 @@
 package main
 
 import (
+	"flag"
 	"fmt"
+	"log"
 	"os"
 	"runtime"
+	"runtime/pprof"
+	"runtime/trace"
 	"sort"
-	"strconv"
 	"strings"
+	"sync"
 )
 
 const endlineSymbole byte = '\n'
@@ -14,9 +18,33 @@ const endlineSymbole byte = '\n'
 const splitLineSymbol byte = ';'
 const maxSizeName int = 35
 const maxSizeLine int = 50
+const minSizeLine int = 10
 const maxDifferentName int = 1000
 
+var processWaitgroup sync.WaitGroup
+
 func main() {
+	flag.Parse()
+	prof, err := os.Create("myprof.prof")
+	if err != nil {
+		log.Fatal(err)
+	}
+	pprof.StartCPUProfile(prof)
+	defer pprof.StopCPUProfile()
+	f, err := os.Create("trace.out")
+	if err != nil {
+		log.Fatalf("failed to create trace output file: %v", err)
+	}
+	defer func() {
+		if err := f.Close(); err != nil {
+			log.Fatalf("failed to close trace file: %v", err)
+		}
+	}()
+	if err := trace.Start(f); err != nil {
+		log.Fatalf("failed to start trace: %v", err)
+	}
+	defer trace.Stop()
+
 	filename := os.Args[1]
 	data := loadFile(filename)
 	content := splitContent(data)
@@ -24,9 +52,12 @@ func main() {
 	var mapSplit = make([]map[string]readingType, len(content))
 	for i := 0; i < len(content); i++ {
 
-		//TODO: use go function
-		mapSplit[i] = processContent(content[i])
+		mapSplit[i] = make(map[string]readingType, maxDifferentName)
+		go processContent(content[i], mapSplit[i])
+		processWaitgroup.Add(1)
 	}
+
+	processWaitgroup.Wait()
 	res := mergeResult(mapSplit...)
 	showResult(res)
 
@@ -132,17 +163,13 @@ func mergeResult(data ...map[string]readingType) map[string]readingType {
 	return res
 }
 
-// TODO:
-// process take a part of the file in params
-// parse each line
-// fill a map
-// return the map
-// it will run in a go routine
-func processContent(data []byte) map[string]readingType {
-
-	res := make(map[string]readingType, maxDifferentName)
+// PERF: this function represent 99% of the duration of the total execution
+// for now it take 1s to process 8millions lines
+// that mans that it'll  take at minimum 125s for the billions sequentially, or 125/16 = ~8s in parallel
+func processContent(data []byte, res map[string]readingType) {
 
 	var lineBuffer = [maxSizeLine]byte{}
+	var readinTypeBuffer = readingType{}
 	bufferIdx := 0
 	for dataIdx := 0; dataIdx < len(data); dataIdx++ {
 		lineBuffer[bufferIdx] = data[dataIdx]
@@ -151,13 +178,16 @@ func processContent(data []byte) map[string]readingType {
 
 			name, value := interpretLine(lineBuffer[:])
 			nameS := string(name)
-			var valueOutputType = readingType{value, value, value, 1}
+			readinTypeBuffer.Min = value
+			readinTypeBuffer.Max = value
+			readinTypeBuffer.Avg = value
+			readinTypeBuffer.Nb = 1
 			v, ok := res[nameS]
 			if ok {
-				res[nameS] = mergeTwoOuputType(v, valueOutputType)
+				res[nameS] = mergeTwoOuputType(v, readinTypeBuffer)
 
 			} else {
-				res[nameS] = readingType{value, value, value, 1}
+				res[nameS] = readinTypeBuffer
 			}
 
 			bufferIdx = 0
@@ -167,13 +197,14 @@ func processContent(data []byte) map[string]readingType {
 
 	}
 
-	return res
+	processWaitgroup.Done()
 }
 
 // INFO:: for now it take ~34 ns per operation, maybe we can improve some stuf : reduce size int?, byte size ? paralell ?
 func interpretLine(line []byte) ([]byte, int) {
-	lineIdx := 0
 	//handle name
+
+	lineIdx := 0
 	for ; lineIdx < len(line) && line[lineIdx] != splitLineSymbol; lineIdx++ {
 
 	}
@@ -183,7 +214,6 @@ func interpretLine(line []byte) ([]byte, int) {
 
 // PERF: for now, it takes only ~0,00004ns per operation (unless the bench is wrong)
 func interpretValue(line []byte) int {
-	var res int
 	var neg bool = false
 
 	// value format is sign ??.??
@@ -202,10 +232,25 @@ func interpretValue(line []byte) int {
 				valueIdx++
 			}
 		}
+		var tmpV int = 0
 
-		tmp, _ := strconv.ParseInt(string(value[:valueIdx]), int(endlineSymbole), 0)
-		res = int(tmp)
-		return -res
+		// if double digit
+		var unit int = 100
+
+		//if single digit
+		if valueIdx == 2 {
+			unit = 10
+		}
+
+		for i := 0; i < valueIdx; i++ {
+			tmpV += int(value[i]-'0') * unit
+			unit = unit / 10
+
+		}
+
+		// tmp, _ := strconv.ParseInt(string(value[:valueIdx]), int(endlineSymbole), 0)
+		// res = int(tmp)
+		return -tmpV
 	}
 	lineIdx = 0
 	for ; lineIdx < len(line) && line[lineIdx] != 10; lineIdx++ {
@@ -216,9 +261,17 @@ func interpretValue(line []byte) int {
 		}
 	}
 
-	tmp, _ := strconv.ParseInt(string(value[:valueIdx]), int(endlineSymbole), 0)
-	res = int(tmp)
-	return res
+	var tmpV int = 0
+	var unit int = 100
+	if valueIdx == 2 {
+		unit = 10
+	}
+	for i := 0; i < valueIdx; i++ {
+		tmpV += int(value[i]-'0') * unit
+		unit = unit / 10
+
+	}
+	return tmpV
 }
 
 func showResult(res map[string]readingType) {
